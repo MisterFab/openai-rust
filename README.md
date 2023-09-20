@@ -33,7 +33,7 @@ export OPENAI_API_KEY=your-openai-api-key
 Here is a simple example that demonstrates how to use the library:
 
 ```rust
-use openai-rust::{types::{Role, ChatCompletionRequest, Message}, OpenAIClient};
+use openai_rust::{types::{Role, ChatCompletionRequest, Message}, OpenAIClient};
 use std::error::Error;
 use std::env;
 
@@ -45,7 +45,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let messages = vec![
         Message::new(Role::User, "What's the meaning of life?"),
         Message::new(Role::Assistant, "The meaning of life is to serve the greater good."),
-        Message::new(Role::User, "What is the greatest good?")
+        Message::new(Role::User, "What is the greatest good?"),
+        Message::new(Role::Assistant, "The greatest good is to live in a society that values liberty and justice for all."),
+        Message::new(Role::User, "How is that possible?"),
     ];
 
     let request = ChatCompletionRequest::new(messages)
@@ -55,7 +57,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let response = client.chat(request).await?;
     
     for choice in response.choices {
-        println!("Content: {}", choice.message.content);
+        println!("Response: {}", choice.message.content);
     }
 
     Ok(())
