@@ -25,7 +25,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let response = client.chat(request).await?;
     
     for choice in response.choices {
-        println!("Response: {}", choice.message.content);
+        println!("Response: {}", choice.message.content.ok_or("No content")?);
     }
 
     Ok(())
