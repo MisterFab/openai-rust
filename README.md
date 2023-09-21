@@ -33,7 +33,10 @@ export OPENAI_API_KEY=your-openai-api-key
 Here is a simple example that demonstrates how to use the library:
 
 ```rust
-use openai_rust::{types::{Role, ChatCompletionRequest, Message}, OpenAIClient};
+use openai_rust::{
+    types::{Role, ChatCompletionRequest, MessageRequest},
+    OpenAIClient
+};
 use std::error::Error;
 use std::env;
 
@@ -43,11 +46,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let client = OpenAIClient::new(api_key);
 
     let messages = vec![
-        Message::new(Role::User, "What's the meaning of life?"),
-        Message::new(Role::Assistant, "The meaning of life is to serve the greater good."),
-        Message::new(Role::User, "What is the greatest good?"),
-        Message::new(Role::Assistant, "The greatest good is to live in a society that values liberty and justice for all."),
-        Message::new(Role::User, "How is that possible?"),
+        MessageRequest::new().role(Role::User).content("What's the meaning of life?"),
+        MessageRequest::new().role(Role::Assistant).content("The meaning of life is to serve the greater good."),
+        MessageRequest::new().role(Role::User).content("What is the greatest good?"),
+        MessageRequest::new().role(Role::Assistant).content("The greatest good is to live in a society that values liberty and justice for all."),
+        MessageRequest::new().role(Role::User).content("How is that possible?"),
     ];
 
     let request = ChatCompletionRequest::new(messages)
@@ -67,7 +70,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 Output:
 
 ```
-> Content: Creating such a society is possible through cooperation, collective effort, working towards equality, and promoting universal values such as peace, respect, and understanding. Education and legislation play crucial roles, as well as each individual's actions and attitudes toward others. The aim is to create a community where every person feels valued and free to express themselves without fear of judgement or harm. This involves a continuing process of dialogue, growth, and social progress.
+> Response: Creating such a society is possible through cooperation, collective effort, working towards equality, and promoting universal values such as peace, respect, and understanding. Education and legislation play crucial roles, as well as each individual's actions and attitudes toward others. The aim is to create a community where every person feels valued and free to express themselves without fear of judgement or harm. This involves a continuing process of dialogue, growth, and social progress.
 ```
 
 ## Contributing

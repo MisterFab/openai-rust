@@ -1,4 +1,7 @@
-use openai_rust::{types::{Role, ChatCompletionRequest, Message}, OpenAIClient};
+use openai_rust::{
+    types::{Role, ChatCompletionRequest, MessageRequest},
+    OpenAIClient
+};
 use std::error::Error;
 use std::env;
 
@@ -8,11 +11,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let client = OpenAIClient::new(api_key);
 
     let messages = vec![
-        Message::new(Role::User, "What's the meaning of life?"),
-        Message::new(Role::Assistant, "The meaning of life is to serve the greater good."),
-        Message::new(Role::User, "What is the greatest good?"),
-        Message::new(Role::Assistant, "The greatest good is to live in a society that values liberty and justice for all."),
-        Message::new(Role::User, "How is that possible?"),
+        MessageRequest::new().role(Role::User).content("What's the meaning of life?"),
+        MessageRequest::new().role(Role::Assistant).content("The meaning of life is to serve the greater good."),
+        MessageRequest::new().role(Role::User).content("What is the greatest good?"),
+        MessageRequest::new().role(Role::Assistant).content("The greatest good is to live in a society that values liberty and justice for all."),
+        MessageRequest::new().role(Role::User).content("How is that possible?"),
     ];
 
     let request = ChatCompletionRequest::new(messages)
