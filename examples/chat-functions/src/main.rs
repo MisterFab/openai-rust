@@ -1,5 +1,5 @@
 use openai_rust::{
-    types::{ChatCompletionRequest, Function, MessageRequest, Parameters, Property, Role},
+    types::{ChatCompletionRequestBuilder, FunctionBuilder, MessageRequestBuilder, ParametersBuilder, PropertyBuilder, Role},
     OpenAIClient,
 };
 use serde_json::{self, Value};
@@ -16,14 +16,41 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let api_key = env::var("OPENAI_API_KEY")?;
     let client = OpenAIClient::new(api_key);
 
-    let messages = vec![MessageRequest::new().role(Role::User).content("What is the weather like in Boston?")];
+    let messages = vec![
+        MessageRequestBuilder::default()
+            .role(Role::User)
+            .content("What is the weather like in Boston?")
+            .build()?
+    ];
     
-    let mut properties = HashMap::new();
-    properties.insert("location".to_string(), Property::new("string", "The city and state, e.g. San Francisco, CA"));
-    let parameters = Parameters::new("object", properties, vec!["location".to_string()]);
-    let functions = vec![Function::new("get_current_weather", "Get the current weather in a given location", parameters)];
+    let mut properties = HashMap::default();
+    properties.insert(
+        "location".to_string(),
+        PropertyBuilder::default()
+            .param_type("string")
+            .description("The city and state, e.g. San Francisco, CA")
+            .build()?
+    );
 
-    let request = ChatCompletionRequest::new(messages.clone()).model("gpt-4").functions(functions);
+    let parameters = ParametersBuilder::default()
+        .param_type("object")
+        .properties(properties)
+        .required(vec!["location".to_string()])
+        .build()?;
+
+    let functions = vec![
+        FunctionBuilder::default()
+            .name("get_current_weather")
+            .description("Get the current weather in a given location")
+            .parameters(parameters)
+            .build()?];
+
+    let request = ChatCompletionRequestBuilder::default()
+                    .model("gpt-4")
+                    .messages(messages.clone())
+                    .functions(functions)
+                    .build()?;
+
     let response = client.chat(request).await?;
 
     let mut available_functions: HashMap<String, fn(String) -> String> = HashMap::new();
@@ -38,10 +65,23 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 let function_response = function_to_call(location);
 
                 let mut new_messages = messages.clone();
-                new_messages.push(MessageRequest::new().role(Role::Assistant).function_call(Some(function_call.clone())));
-                new_messages.push(MessageRequest::new().role(Role::Function).name(&function_call.name).content(function_response));
+                new_messages.push(MessageRequestBuilder::default()
+                                    .role(Role::Assistant)
+                                    .function_call(function_call.clone())
+                                    .build()?
+                );
+                new_messages.push(MessageRequestBuilder::default()
+                                    .role(Role::Function)
+                                    .name(&function_call.name)
+                                    .content(function_response)
+                                    .build()?
+                );
 
-                let second_request = ChatCompletionRequest::new(new_messages).model("gpt-4");
+                let second_request = ChatCompletionRequestBuilder::default()
+                                        .model("gpt-4")
+                                        .messages(new_messages)
+                                        .build()?;
+                                
                 let second_response = client.chat(second_request).await?;
 
                 for second_choice in &second_response.choices {
@@ -54,5 +94,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
             println!("No function call found");
         }
     }
+
     Ok(())
 }

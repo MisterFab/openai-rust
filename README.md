@@ -34,7 +34,7 @@ Here is a simple example that demonstrates how to use the library:
 
 ```rust
 use openai_rust::{
-    types::{Role, ChatCompletionRequest, MessageRequest},
+    types::{Role, ChatCompletionRequestBuilder, MessageRequestBuilder},
     OpenAIClient
 };
 use std::error::Error;
@@ -46,21 +46,38 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let client = OpenAIClient::new(api_key);
 
     let messages = vec![
-        MessageRequest::new().role(Role::User).content("What's the meaning of life?"),
-        MessageRequest::new().role(Role::Assistant).content("The meaning of life is to serve the greater good."),
-        MessageRequest::new().role(Role::User).content("What is the greatest good?"),
-        MessageRequest::new().role(Role::Assistant).content("The greatest good is to live in a society that values liberty and justice for all."),
-        MessageRequest::new().role(Role::User).content("How is that possible?"),
+        MessageRequestBuilder::default()
+            .role(Role::User)
+            .content("What's the meaning of life?")
+            .build()?,
+        MessageRequestBuilder::default()
+            .role(Role::Assistant)
+            .content("The meaning of life is to serve the greater good.")
+            .build()?,
+        MessageRequestBuilder::default()
+            .role(Role::User)
+            .content("What is the greatest good?")
+            .build()?,
+        MessageRequestBuilder::default()
+            .role(Role::Assistant)
+            .content("The greatest good is to live in a society that values liberty and justice for all.")
+            .build()?,
+        MessageRequestBuilder::default()
+            .role(Role::User)
+            .content("How is that possible?")
+            .build()?,
     ];
 
-    let request = ChatCompletionRequest::new(messages)
+    let request = ChatCompletionRequestBuilder::default()
+        .messages(messages)
         .model("gpt-4")    
-        .max_tokens(200);
+        .max_tokens(200)
+        .build()?;
 
     let response = client.chat(request).await?;
     
     for choice in response.choices {
-        println!("Response: {}", choice.message.content.ok_or("No content")?);
+        println!("Response: {}", choice.message.content.ok_or("No content!")?);
     }
 
     Ok(())
