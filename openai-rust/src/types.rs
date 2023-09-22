@@ -12,7 +12,7 @@ pub enum Role {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Builder, Default)]
-#[builder(setter(into, strip_option), default)]
+#[builder(setter(into, strip_option), default, build_fn(validate = "Self::validate"))]
 pub struct ChatCompletionRequest {
     #[builder(default = "String::from(\"gpt-3.5-turbo\")")]
     pub model: String,
@@ -117,3 +117,30 @@ impl Default for Role {
         Role::User
     }
 }
+
+impl ChatCompletionRequestBuilder {
+    fn validate(&self) -> Result<(), String> {
+        if let Some(temp) = self.temperature {
+            let temperature_value = temp.unwrap();
+            if temperature_value < 0.0 || temperature_value > 2.0 {
+                return Err(format!("Invalid temperature: {}. It should be between 0.0 and 2.0.", temperature_value));
+            }
+        }
+
+        if let Some(presence_penalty) = self.presence_penalty {
+            let presence_penalty_value = presence_penalty.unwrap();
+            if presence_penalty_value < -2.0 || presence_penalty_value > 2.0 {
+                return Err(format!("Invalid presence_penalty: {}. It should be between -2.0 and 2.0.", presence_penalty_value));
+            }
+        }
+
+        if let Some(frequency_penalty) = self.frequency_penalty {
+            let frequency_penalty_value = frequency_penalty.unwrap();
+            if frequency_penalty_value < 0.0 || frequency_penalty_value > 2.0 {
+                return Err(format!("Invalid temperature: {}. It should be between -2.0 and 2.0.", frequency_penalty_value));
+            }
+        }
+            
+        Ok(())
+    }
+}    
