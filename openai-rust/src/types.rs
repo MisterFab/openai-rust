@@ -118,6 +118,29 @@ impl Default for Role {
     }
 }
 
+#[derive(Debug, Deserialize)]
+pub struct StreamResponse {
+    pub id: String,
+    pub object: String,
+    pub created: u64,
+    pub model: String,
+    pub choices: Vec<Choice>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Choice {
+    pub index: u64,
+    pub delta: Option<Delta>,
+    pub finish_reason: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Delta {
+    pub role: Option<String>,
+    pub content: Option<String>,
+}
+
+
 impl ChatCompletionRequestBuilder {
     fn validate(&self) -> Result<(), String> {
         if let Some(temp) = self.temperature {
@@ -137,7 +160,7 @@ impl ChatCompletionRequestBuilder {
         if let Some(frequency_penalty) = self.frequency_penalty {
             let frequency_penalty_value = frequency_penalty.unwrap();
             if frequency_penalty_value < 0.0 || frequency_penalty_value > 2.0 {
-                return Err(format!("Invalid temperature: {}. It should be between -2.0 and 2.0.", frequency_penalty_value));
+                return Err(format!("Invalid frequency_penalty: {}. It should be between -2.0 and 2.0.", frequency_penalty_value));
             }
         }
             
