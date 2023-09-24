@@ -4,7 +4,7 @@ use openai_rust::{
 };
 use std::error::Error;
 use std::env;
-use std::io::{self, Write};
+use std::io::{stdout, Write};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -35,21 +35,22 @@ async fn main() -> Result<(), Box<dyn Error>> {
     ];
 
     let request = ChatCompletionRequestBuilder::default()
-        .messages(messages)  
-        .stream(true)
+        .messages(messages)
+        .model("gpt-4")
         .build()?;
 
     let mut rx = client.chat_stream(request).await?;
     
+    let mut lock = stdout().lock();
     while let Some(response) = rx.recv().await {
         for choice in response.choices {
             if let Some(delta) = &choice.delta {
                 if let Some(content) = &delta.content {
-                    print!("{}", content);
-                    io::stdout().flush().unwrap();
+                    write!(lock, "{}", content).unwrap();
                 }
             }
         }
+        stdout().flush()?;
     }
     
     Ok(())
