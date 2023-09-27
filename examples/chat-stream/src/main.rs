@@ -7,7 +7,7 @@ use std::env;
 use std::io::{stdout, Write};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let api_key = env::var("OPENAI_API_KEY")?;
     let client = OpenAIClient::new(api_key);
 

@@ -2,60 +2,60 @@ use serde::{Deserialize, Serialize};
 use derive_builder::Builder;
 use std::collections::HashMap;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Role {
+    #[default]
     User,
     System,
     Assistant,
     Function,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Builder, Default)]
+#[derive(Debug, Clone, Default, Serialize, Builder)]
 #[builder(setter(into, strip_option), default, build_fn(validate = "Self::validate"))]
 pub struct ChatCompletionRequest {
     #[builder(default = "String::from(\"gpt-3.5-turbo\")")]
     pub model: String,
-    #[builder(default = "vec![MessageRequest::default()]")]
     pub messages: Vec<MessageRequest>,    
     #[serde(skip_serializing_if = "Option::is_none")]
     pub functions: Option<Vec<Function>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub function_call: Option<String>,
-    pub temperature: Option<f32>,
-    pub top_p: Option<f32>,
+    pub temperature: Option<f64>,
+    pub top_p: Option<f64>,
     pub n: Option<i32>,
     pub stream: Option<bool>,
     pub stop: Option<Vec<String>>,
     pub max_tokens: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub presence_penalty: Option<f32>,
+    pub presence_penalty: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub frequency_penalty: Option<f32>,
+    pub frequency_penalty: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub logit_bias: Option<HashMap<String, f32>>,
+    pub logit_bias: Option<HashMap<String, f64>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Builder)]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct ChatCompletionResponse {
     pub id: String,
     pub object: String,
-    pub created: u64,
+    pub created: u32,
     pub model: String,
     pub choices: Vec<ChoiceWrapper>,
     pub usage: Usage,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Builder)]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct ChoiceWrapper {
     pub index: i32,
     pub message: MessageResponse,
     pub finish_reason: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Builder, Default)]
+#[derive(Debug, Clone, Default, Serialize, Builder)]
 #[builder(setter(into, strip_option), default)]
 pub struct MessageRequest {
     pub role: Role,
@@ -66,28 +66,28 @@ pub struct MessageRequest {
     pub function_call: Option<FunctionCall>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Builder)]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct MessageResponse {
     pub role: Role,
     pub content: Option<String>,
     pub function_call: Option<FunctionCall>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Builder)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, Builder)]
 #[builder(setter(into))]
 pub struct FunctionCall {
     pub name: String,
     pub arguments: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Builder)]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct Usage {
     pub prompt_tokens: i32,
     pub completion_tokens: i32,
     pub total_tokens: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Builder)]
+#[derive(Debug, Clone, Default, Serialize, Builder)]
 #[builder(setter(into))]
 pub struct Function {
     pub name: String,
@@ -95,7 +95,7 @@ pub struct Function {
     pub parameters: Parameters,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Builder)]
+#[derive(Debug, Clone, Default, Serialize, Builder)]
 #[builder(setter(into))]
 pub struct Parameters {
     #[serde(rename = "type")]
@@ -104,7 +104,7 @@ pub struct Parameters {
     pub required: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Builder)]
+#[derive(Debug, Clone, Default, Serialize, Builder)]
 #[builder(setter(into))]
 pub struct Property {
     #[serde(rename = "type")]
@@ -112,34 +112,59 @@ pub struct Property {
     pub description: String,
 }
 
-impl Default for Role {
-    fn default() -> Self {
-        Role::User
-    }
-}
-
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct StreamResponse {
     pub id: String,
     pub object: String,
-    pub created: u64,
+    pub created: u32,
     pub model: String,
     pub choices: Vec<Choice>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct Choice {
-    pub index: u64,
+    pub index: u32,
     pub delta: Option<Delta>,
     pub finish_reason: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct Delta {
     pub role: Option<String>,
     pub content: Option<String>,
 }
+#[derive(Debug, Clone, Default, Builder)]
+#[builder(setter(into, strip_option), default, build_fn(validate = "Self::validate"))]
+pub struct TranscriptionRequest{
+    pub file: String,
+    #[builder(default = "String::from(\"whisper-1\")")]
+    pub model: String,
+    pub prompt: Option<String>,
+    pub response_format: Option<String>,
+    pub temperature: Option<f64>,
+    pub language: Option<String>
+}
 
+#[derive(Debug, Clone, Default, Builder)]
+#[builder(setter(into, strip_option), default, build_fn(validate = "Self::validate"))]
+pub struct TranslationRequest{
+    pub file: String,
+    #[builder(default = "String::from(\"whisper-1\")")]
+    pub model: String,
+    pub prompt: Option<String>,
+    pub response_format: Option<String>,
+    pub temperature: Option<f64>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct TranscriptionResponse {
+    pub text: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct TranslationResponse {
+    pub text: String,
+}
 
 impl ChatCompletionRequestBuilder {
     fn validate(&self) -> Result<(), String> {
@@ -166,4 +191,30 @@ impl ChatCompletionRequestBuilder {
             
         Ok(())
     }
-}    
+}
+
+impl TranscriptionRequestBuilder {
+    fn validate(&self) -> Result<(), String> {
+        if let Some(temp) = self.temperature {
+            let temperature_value = temp.unwrap();
+            if temperature_value < 0.0 || temperature_value > 1.0 {
+                return Err(format!("Invalid temperature: {}. It should be between 0.0 and 1.0.", temperature_value));
+            }
+        }
+            
+        Ok(())
+    }
+}
+
+impl TranslationRequestBuilder {
+    fn validate(&self) -> Result<(), String> {
+        if let Some(temp) = self.temperature {
+            let temperature_value = temp.unwrap();
+            if temperature_value < 0.0 || temperature_value > 1.0 {
+                return Err(format!("Invalid temperature: {}. It should be between 0.0 and 1.0.", temperature_value));
+            }
+        }
+            
+        Ok(())
+    }
+}
