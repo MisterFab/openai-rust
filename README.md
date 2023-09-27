@@ -7,7 +7,7 @@ This Rust library provides a simple and easy-to-use client for interacting with 
 - Asynchronous API support with streaming capabilities
 - Strongly-typed request and response objects
 - Easy-to-use builder methods for request customization
-- Support for multiple OpenAI APIs including chat completions, audio transcriptions/tranlations, and image creation
+- Support for chat completions, audio transcriptions/tranlations, and image creation
 - Fully compatible with GPT-3.5-turbo, GPT-4 models, and other API endpoints
 - Handling multipart/form-data for file handling in transcription and translation
 
