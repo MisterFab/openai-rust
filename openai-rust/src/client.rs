@@ -1,4 +1,4 @@
-use crate::types::{ChatCompletionRequest, ChatCompletionResponse, StreamResponse, TranscriptionRequest, TranscriptionResponse, TranslationRequest, TranslationResponse};
+use crate::types::{ChatCompletionRequest, ChatCompletionResponse, StreamResponse, TranscriptionRequest, TranscriptionResponse, TranslationRequest, TranslationResponse, ImageRequest, ImageResponse};
 use reqwest::{Client, RequestBuilder, Body, multipart::{Form, Part}};
 use std::error::Error;
 use tokio::sync::mpsc::{self, UnboundedSender, UnboundedReceiver};
@@ -12,6 +12,7 @@ use serde::{Serialize, Deserialize};
 const CHAT_API_URL: &str = "https://api.openai.com/v1/chat/completions";
 const TRANSCRIPTIONS_API_URL: &str = "https://api.openai.com/v1/audio/transcriptions";
 const TRANSLATIONS_API_URL: &str = "https://api.openai.com/v1/audio/translations";
+const IMAGE_API_URL: &str = "https://api.openai.com/v1/images/generations";
 
 pub struct OpenAIClient {
     client: reqwest::Client,
@@ -75,6 +76,12 @@ impl OpenAIClient {
         if let Some(temperature) = request.temperature { form = form.text("temperature", temperature.to_string()); }
 
         self.send_multipart_request(TRANSLATIONS_API_URL, form).await
+    }
+
+    pub async fn image(&self, request: ImageRequest) -> Result<ImageResponse, Box<dyn Error + Send + Sync>> {
+        let response = self.build_request(IMAGE_API_URL, &request)?.send().await?;
+        let text = response.text().await?;
+        Ok(serde_json::from_str(&text)?)
     }
 
     fn build_request<T: Serialize>(&self, url: &str, request: &T) -> Result<RequestBuilder, Box<dyn Error + Send + Sync>> {

@@ -38,6 +38,32 @@ pub struct ChatCompletionRequest {
     pub user: Option<String>,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Builder)]
+#[builder(setter(into))]
+pub struct Function {
+    pub name: String,
+    pub description: String,
+    pub parameters: Parameters,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Builder)]
+#[builder(setter(into, strip_option), default)]
+pub struct MessageRequest {
+    pub role: Role,
+    pub content: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub function_call: Option<FunctionCall>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, Builder)]
+#[builder(setter(into))]
+pub struct FunctionCall {
+    pub name: String,
+    pub arguments: String,
+}
+
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct ChatCompletionResponse {
     pub id: String,
@@ -55,17 +81,6 @@ pub struct ChoiceWrapper {
     pub finish_reason: String,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Builder)]
-#[builder(setter(into, strip_option), default)]
-pub struct MessageRequest {
-    pub role: Role,
-    pub content: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub name: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub function_call: Option<FunctionCall>,
-}
-
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct MessageResponse {
     pub role: Role,
@@ -73,26 +88,11 @@ pub struct MessageResponse {
     pub function_call: Option<FunctionCall>,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize, Builder)]
-#[builder(setter(into))]
-pub struct FunctionCall {
-    pub name: String,
-    pub arguments: String,
-}
-
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct Usage {
     pub prompt_tokens: i32,
     pub completion_tokens: i32,
     pub total_tokens: i32,
-}
-
-#[derive(Debug, Clone, Default, Serialize, Builder)]
-#[builder(setter(into))]
-pub struct Function {
-    pub name: String,
-    pub description: String,
-    pub parameters: Parameters,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Builder)]
@@ -135,7 +135,7 @@ pub struct Delta {
 }
 #[derive(Debug, Clone, Default, Builder)]
 #[builder(setter(into, strip_option), default, build_fn(validate = "Self::validate"))]
-pub struct TranscriptionRequest{
+pub struct TranscriptionRequest {
     pub file: String,
     #[builder(default = "String::from(\"whisper-1\")")]
     pub model: String,
@@ -145,9 +145,14 @@ pub struct TranscriptionRequest{
     pub language: Option<String>
 }
 
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct TranscriptionResponse {
+    pub text: String,
+}
+
 #[derive(Debug, Clone, Default, Builder)]
 #[builder(setter(into, strip_option), default, build_fn(validate = "Self::validate"))]
-pub struct TranslationRequest{
+pub struct TranslationRequest {
     pub file: String,
     #[builder(default = "String::from(\"whisper-1\")")]
     pub model: String,
@@ -157,13 +162,33 @@ pub struct TranslationRequest{
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
-pub struct TranscriptionResponse {
+pub struct TranslationResponse {
     pub text: String,
 }
 
+#[derive(Debug, Clone, Default, Serialize, Builder)]
+#[builder(setter(into, strip_option), default, build_fn(validate = "Self::validate"))]
+pub struct ImageRequest {
+    pub prompt: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub n: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub size: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub response_format: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub user: Option<String>,
+}
+
 #[derive(Debug, Clone, Default, Deserialize)]
-pub struct TranslationResponse {
-    pub text: String,
+pub struct ImageResponse {
+    pub created: u32,
+    pub data: Vec<Image>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct Image {
+    pub url: String,
 }
 
 impl ChatCompletionRequestBuilder {
@@ -212,6 +237,18 @@ impl TranslationRequestBuilder {
             let temperature_value = temp.unwrap();
             if temperature_value < 0.0 || temperature_value > 1.0 {
                 return Err(format!("Invalid temperature: {}. It should be between 0.0 and 1.0.", temperature_value));
+            }
+        }
+            
+        Ok(())
+    }
+}
+
+impl ImageRequestBuilder {
+    fn validate(&self) -> Result<(), String> {
+        if let Some(prompt) = &self.prompt {
+            if prompt.len() > 1000 {
+                return Err(format!("Invalid prompt: {}. It should be less than 1000 characters.", prompt.len()));
             }
         }
             
